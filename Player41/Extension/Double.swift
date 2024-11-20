@@ -24,4 +24,10 @@ extension Double {
             return String(format: "%02d:%02d", minutes, seconds)
         }
     }
+    
+    /// Converts a Double in the range 0...1 to a percentage string.
+    /// - Returns: A string representing the percentage, e.g., "13%"
+    func toPercentageString() -> String {
+        return String(format: "%.0f%%", self * 100)
+    }
 }

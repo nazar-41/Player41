@@ -14,8 +14,9 @@ struct PlayerView: View {
     var body: some View {
         VStack(spacing: 24) {
             
+
             // Video Player
-            VideoPlayer(player: vm.player)
+            VideoPlayer(player: vm.song.player)
                 .aspectRatio(16 / 9, contentMode: .fit)
                 .cornerRadius(12)
                 .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 4)
@@ -84,6 +85,9 @@ struct PlayerView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            
+            // Download
+            DownloadBtnView(song: vm.song)
         }
         .padding()
         .background(Color(.systemGroupedBackground))

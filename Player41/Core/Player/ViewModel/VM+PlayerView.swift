@@ -10,7 +10,7 @@ import AVFoundation
 import Combine
 
 class VM_PlayerView: ObservableObject {
-    @Published var player: AVPlayer? = AVPlayer(url: URL(string: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")!) {
+    @Published var song: SongModel = .init(){
         didSet { setupListeners() }
     }
     @Published var playerStatus: Enum_PlayerState = .paused
@@ -45,7 +45,7 @@ class VM_PlayerView: ObservableObject {
     }
 
     private func playerStatusListener() {
-        player?.publisher(for: \.timeControlStatus)
+        song.player?.publisher(for: \.timeControlStatus)
             .sink { [weak self] status in
                 self?.updatePlayerStatus(for: status)
             }
@@ -66,7 +66,7 @@ class VM_PlayerView: ObservableObject {
     }
 
     private func playerErrorListener() {
-        player?.publisher(for: \.status)
+        song.player?.publisher(for: \.status)
             .sink { [weak self] status in
                 self?.handlePlayerError(for: status)
             }
@@ -77,13 +77,13 @@ class VM_PlayerView: ObservableObject {
         if status == .failed {
             playerStatus = .error("FAILED")
         }
-        if let error = player?.currentItem?.error {
+        if let error = song.player?.currentItem?.error {
             playerStatus = .error(error.localizedDescription)
         }
     }
 
     private func playerTotalDurationListener() {
-        player?.publisher(for: \.currentItem?.duration)
+        song.player?.publisher(for: \.currentItem?.duration)
             .compactMap { $0?.seconds }
             .sink { [weak self] duration in
                 self?.totalDuration = duration
@@ -92,7 +92,7 @@ class VM_PlayerView: ObservableObject {
     }
 
     private func playerBufferListener() {
-        player?.publisher(for: \.currentItem?.loadedTimeRanges)
+        song.player?.publisher(for: \.currentItem?.loadedTimeRanges)
             .sink { [weak self] timeRanges in
                 self?.updateBufferProgress(timeRanges)
             }
@@ -100,14 +100,14 @@ class VM_PlayerView: ObservableObject {
     }
 
     private func playerTimeObserver() {
-        timeObserver = player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 1, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: .main) { [weak self] time in
+        timeObserver = song.player?.addPeriodicTimeObserver(forInterval: CMTime(seconds: 1, preferredTimescale: CMTimeScale(NSEC_PER_SEC)), queue: .main) { [weak self] time in
             self?.currentTime = time.seconds
         }
     }
 
     private func removeTimeObserver() {
         if let observer = timeObserver {
-            player?.removeTimeObserver(observer)
+            song.player?.removeTimeObserver(observer)
             timeObserver = nil
         }
     }
@@ -133,18 +133,18 @@ class VM_PlayerView: ObservableObject {
 
 
     private func setMaxBufferDuration() {
-        player?.currentItem?.preferredForwardBufferDuration = maxBufferDuration
+        song.player?.currentItem?.preferredForwardBufferDuration = maxBufferDuration
     }
 
     func seek(to time: Double) {
-        player?.seek(to: CMTime(seconds: time, preferredTimescale: 1), toleranceBefore: .zero, toleranceAfter: .zero)
+        song.player?.seek(to: CMTime(seconds: time, preferredTimescale: 1), toleranceBefore: .zero, toleranceAfter: .zero)
     }
 
     func play() {
-        player?.play()
+        song.player?.play()
     }
 
     func pause() {
-        player?.pause()
+        song.player?.pause()
     }
 }
