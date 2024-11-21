@@ -11,7 +11,8 @@ import AVFoundation
 
 struct SongModel{
     let id: String = "abcd"
-    let urlString: String = "http://cdnbakmi.kaltura.com/p/243342/sp/24334200/playManifest/entryId/0_uka1msg4/flavorIds/1_vqhfu6uy,1_80sohj7p/format/applehttp/protocol/http/a.m3u8"
+    let urlString: String = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+    //"http://cdnbakmi.kaltura.com/p/243342/sp/24334200/playManifest/entryId/0_uka1msg4/flavorIds/1_vqhfu6uy,1_80sohj7p/format/applehttp/protocol/http/a.m3u8"
     
     var url: URL?{
         return URL(string: urlString)

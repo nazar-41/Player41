@@ -31,7 +31,7 @@ class AssetPersistenceManager: NSObject {
     private var isDownloading = false
     private var downloadedAssetsMap = [String: Asset]()
     
-    private let backgroundQueue = DispatchQueue(label: "com.dinle.media.downloadQueue", qos: .background)
+    private let backgroundQueue = DispatchQueue(label: "com.player41.media.downloadQueue", qos: .background)
 
 
 
