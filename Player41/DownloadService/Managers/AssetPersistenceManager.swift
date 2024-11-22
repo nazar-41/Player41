@@ -161,7 +161,7 @@ class AssetPersistenceManager: NSObject {
     }
     
     /// Returns an Asset pointing to a file on disk if it exists.
-    func localAssetForStream(withStream stream: Stream) -> Asset? {
+    func localAssetForStream(with stream: Stream) -> Asset? {
         let userDefaults = UserDefaults.standard
         guard let localFileLocation = userDefaults.value(forKey: stream.id) as? Data else { return nil }
         
@@ -172,7 +172,7 @@ class AssetPersistenceManager: NSObject {
                                     bookmarkDataIsStale: &bookmarkDataIsStale)
 
             if bookmarkDataIsStale {
-                print("Bookmark data is stale!")
+                fatalError("Bookmark data is stale!")
             }
             
             let urlAsset = AVURLAsset(url: url)
@@ -181,15 +181,15 @@ class AssetPersistenceManager: NSObject {
             
             return asset
         } catch {
-            print("Failed to create URL from bookmark with error: \(error)")
-            return nil
+            fatalError("Failed to create URL from bookmark with error: \(error)")
         }
     }
+
 
     /// Returns the current download state for a given Asset.
     func downloadState(for asset: Asset) -> Asset.DownloadState {
         // Check if there is a file URL stored for this asset.
-        if let localFileLocation = localAssetForStream(withStream: asset.stream)?.urlAsset.url {
+        if let localFileLocation = localAssetForStream(with: asset.stream)?.urlAsset.url {
             // Check if the file exists on disk
             if FileManager.default.fileExists(atPath: localFileLocation.path) {
                 return .downloaded
@@ -210,7 +210,7 @@ class AssetPersistenceManager: NSObject {
         let userDefaults = UserDefaults.standard
 
         do {
-            if let localFileLocation = localAssetForStream(withStream: asset.stream)?.urlAsset.url {
+            if let localFileLocation = localAssetForStream(with: asset.stream)?.urlAsset.url {
                 try FileManager.default.removeItem(at: localFileLocation)
 
                 userDefaults.removeObject(forKey: asset.stream.id)
@@ -333,7 +333,7 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
      }
     
     private func handleCancellation(for asset: Asset, userDefaults: UserDefaults) {
-         guard let localFileLocation = localAssetForStream(withStream: asset.stream)?.urlAsset.url else { return }
+         guard let localFileLocation = localAssetForStream(with: asset.stream)?.urlAsset.url else { return }
 
          do {
              try FileManager.default.removeItem(at: localFileLocation)

@@ -63,15 +63,22 @@ struct DownloadBtnView: View {
                         
                         // Downloaded Button with Delete Confirmation
                         if downloadState == .downloaded {
-                            Button(action: {
-                                showDeleteConfirmation = true
-                            }) {
-                                Label("Delete", systemImage: "trash.fill")
-                                    .font(.body)
-                                    .foregroundColor(.red)
+                            VStack{
+                                Button(action: {
+                                    showDeleteConfirmation = true
+                                }) {
+                                    Label("Delete", systemImage: "trash.fill")
+                                        .font(.body)
+                                        .foregroundColor(.red)
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.large)
+                                
+                                
+                                
+                                LocalPlayerView(song: song)
+                                
                             }
-                            .buttonStyle(.bordered)
-                            .controlSize(.large)
                             .alert(isPresented: $showDeleteConfirmation) {
                                 Alert(
                                     title: Text("Delete Download"),
