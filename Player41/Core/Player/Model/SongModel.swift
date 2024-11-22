@@ -9,23 +9,33 @@ import Foundation
 import AVFoundation
 
 
-struct SongModel{
+struct SongModel {
     let id: String = "abcd"
     let urlString: String = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
-    //"http://cdnbakmi.kaltura.com/p/243342/sp/24334200/playManifest/entryId/0_uka1msg4/flavorIds/1_vqhfu6uy,1_80sohj7p/format/applehttp/protocol/http/a.m3u8"
     
-    var url: URL?{
-        return URL(string: urlString)
+    var url: URL? {
+        URL(string: urlString)
     }
     
-    var asset: Asset?{
-        guard let url = url else{return nil}
-        return .init(urlAsset: .init(url: url), stream: .init(id: id, playlistURL: url.absoluteString), id: id)
+    var asset: Asset? {
+        guard let url else { return nil }
+        return Asset(
+            urlAsset: AVURLAsset(url: url),
+            stream: Stream(id: id, playlistURL: url.absoluteString),
+            id: id
+        )
     }
     
-    var player: AVPlayer?{
-        guard let url = url else{return nil}
-
-        return .init(url: url)
+    var isDownloaded: Bool {
+           guard let stream = asset?.stream else { return false }
+           return AssetPersistenceManager.sharedManager.localAssetForStream(with: stream) != nil
+    }
+    
+    var localURL: URL? {
+        guard let stream = asset?.stream,
+              let localAsset = AssetPersistenceManager.sharedManager.localAssetForStream(with: stream) else {
+            return nil
+        }
+        return localAsset.urlAsset.url
     }
 }

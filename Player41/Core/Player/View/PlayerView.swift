@@ -10,7 +10,6 @@ import AVKit
 
 struct PlayerView: View {
     @StateObject private var vm = VM_PlayerView()
-    
     var body: some View {
         NavigationView{
             ScrollView(showsIndicators: false){
@@ -18,7 +17,7 @@ struct PlayerView: View {
                     
 
                     // Video Player
-                    VideoPlayer(player: vm.song.player)
+                    VideoPlayer(player: vm.player)
                         .aspectRatio(16 / 9, contentMode: .fit)
                         .cornerRadius(12)
                         .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 4)

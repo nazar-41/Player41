@@ -11,17 +11,12 @@ import AVKit
 struct LocalPlayerView: View {
     let song: SongModel
     @State private var player: AVPlayer?
-    @State private var localURL: String?
     
     var body: some View {
         VStack {
-            Text(localURL ?? "No Local Asset")
-                .padding()
-            
             if let player = player {
                 VideoPlayer(player: player)
-                    .aspectRatio(16/9, contentMode: .fit)
-                    .onAppear {
+                    .onAppear{
                         player.play()
                     }
             } else {
@@ -36,18 +31,8 @@ struct LocalPlayerView: View {
     }
     
     private func setupPlayer() {
-        guard let stream = song.asset?.stream else { return }
-        
-        if let localAsset = AssetPersistenceManager.sharedManager.localAssetForStream(with: stream) {
-            DispatchQueue.main.async {
-                self.localURL = localAsset.urlAsset.url.absoluteString
-                self.player = AVPlayer(playerItem: AVPlayerItem(asset: localAsset.urlAsset))
-            }
-        } else {
-            DispatchQueue.main.async {
-                self.localURL = "No local asset found"
-            }
-        }
+        guard let localURL = song.localURL else{return}
+        player = .init(url: localURL)
     }
 }
 

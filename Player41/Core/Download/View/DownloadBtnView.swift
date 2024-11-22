@@ -10,7 +10,8 @@ import SwiftUI
 struct DownloadBtnView: View {
     let song: SongModel
     @StateObject private var vm: VM_DownloadBtnView
-    
+    @State private var openLocalPlayer: Bool = false
+
     @State private var showDeleteConfirmation = false
     
     init(song: SongModel) {
@@ -62,8 +63,17 @@ struct DownloadBtnView: View {
                         }
                         
                         // Downloaded Button with Delete Confirmation
-                        if downloadState == .downloaded {
-                            VStack{
+                        if downloadState == .downloaded && song.isDownloaded {
+                            HStack{
+                                Button(action: {
+                                    openLocalPlayer = true
+                                }) {
+                                    Label("Play from Local", systemImage: "arrow.down.circle.fill")
+                                        .font(.body)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.large)
+                                
                                 Button(action: {
                                     showDeleteConfirmation = true
                                 }) {
@@ -74,10 +84,7 @@ struct DownloadBtnView: View {
                                 .buttonStyle(.bordered)
                                 .controlSize(.large)
                                 
-                                
-                                
-                                LocalPlayerView(song: song)
-                                
+                            
                             }
                             .alert(isPresented: $showDeleteConfirmation) {
                                 Alert(
@@ -94,6 +101,9 @@ struct DownloadBtnView: View {
                     .frame(maxWidth: .infinity)
                 }
                 .padding()
+                .sheet(isPresented: $openLocalPlayer) {
+                    LocalPlayerView(song: song)
+                }
             }
         }
     }
