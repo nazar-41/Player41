@@ -21,19 +21,16 @@ struct SongModel {
         guard let url else { return nil }
         return Asset(
             urlAsset: AVURLAsset(url: url),
-            stream: Stream(id: id, playlistURL: url.absoluteString),
             id: id
         )
     }
     
     var isDownloaded: Bool {
-           guard let stream = asset?.stream else { return false }
-           return AssetPersistenceManager.sharedManager.localAssetForStream(with: stream) != nil
+           return AssetPersistenceManager.sharedManager.localAssetForStream(with: id) != nil
     }
     
     var localURL: URL? {
-        guard let stream = asset?.stream,
-              let localAsset = AssetPersistenceManager.sharedManager.localAssetForStream(with: stream) else {
+        guard let localAsset = AssetPersistenceManager.sharedManager.localAssetForStream(with: id) else {
             return nil
         }
         return localAsset.urlAsset.url

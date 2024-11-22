@@ -10,8 +10,7 @@ import AVFoundation
 
 struct Asset: Equatable, Identifiable{
     var urlAsset: AVURLAsset
-    let stream: Stream
-    var id = UUID().uuidString
+    let id: String
 }
 
 extension Asset {

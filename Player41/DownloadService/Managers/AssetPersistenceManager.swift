@@ -66,11 +66,9 @@ class AssetPersistenceManager: NSObject {
                 for task in tasksArray {
                     guard let assetDownloadTask = task as? AVAggregateAssetDownloadTask else { continue }
                     
-                    //                 let stream = StreamListManager.shared.stream(withName: assetName)
-                    
                     let urlAsset = assetDownloadTask.urlAsset
                     
-                    let asset = Asset(urlAsset: urlAsset, stream: .init(id: task.description, playlistURL: urlAsset.url.absoluteString))
+                    let asset = Asset(urlAsset: urlAsset, id: task.description)
                     
                     self.activeDownloadsMap[assetDownloadTask] = asset
                 }
@@ -92,7 +90,7 @@ class AssetPersistenceManager: NSObject {
         startNextDownload()
         
         var userInfo = [String: Any]()
-        userInfo[Asset.Keys.id] = asset.stream.id
+        userInfo[Asset.Keys.id] = asset.id
         userInfo[Asset.Keys.downloadState] = Asset.DownloadState.downloading.rawValue
         DispatchQueue.main.async{
             NotificationCenter.default.post(name: .AssetDownloadStateChanged, object: nil, userInfo: userInfo)
@@ -126,20 +124,20 @@ class AssetPersistenceManager: NSObject {
         guard let task =
                 assetDownloadURLSession.aggregateAssetDownloadTask(with: asset.urlAsset,
                                                                    mediaSelections: [preferredMediaSelection],
-                                                                   assetTitle: asset.stream.id,
+                                                                   assetTitle: asset.id,
                                                                    assetArtworkData: nil,
                                                                    options:
                                                                     [AVAssetDownloadTaskMinimumRequiredMediaBitrateKey: 265_000]) else { return }
         
         // To better track the AVAssetDownloadTask, set the taskDescription to something unique for the sample.
-        task.taskDescription = asset.stream.id
+        task.taskDescription = asset.id
         
         activeDownloadsMap[task] = asset
         
         task.resume()
         
         var userInfo = [String: Any]()
-        userInfo[Asset.Keys.id] = asset.stream.id
+        userInfo[Asset.Keys.id] = asset.id
         userInfo[Asset.Keys.downloadState] = Asset.DownloadState.downloading.rawValue
         userInfo[Asset.Keys.downloadSelectionDisplayName] = displayNamesForSelectedMediaOptions(preferredMediaSelection)
         
@@ -152,7 +150,7 @@ class AssetPersistenceManager: NSObject {
     func assetForStream(withName name: String) -> Asset? {
         var asset: Asset?
 
-        for (_, assetValue) in activeDownloadsMap where name == assetValue.stream.id {
+        for (_, assetValue) in activeDownloadsMap where name == assetValue.id {
             asset = assetValue
             break
         }
@@ -161,9 +159,9 @@ class AssetPersistenceManager: NSObject {
     }
     
     /// Returns an Asset pointing to a file on disk if it exists.
-    func localAssetForStream(with stream: Stream) -> Asset? {
+    func localAssetForStream(with id: String) -> Asset? {
         let userDefaults = UserDefaults.standard
-        guard let localFileLocation = userDefaults.value(forKey: stream.id) as? Data else { return nil }
+        guard let localFileLocation = userDefaults.value(forKey: id) as? Data else { return nil }
         
         var asset: Asset?
         var bookmarkDataIsStale = false
@@ -177,7 +175,7 @@ class AssetPersistenceManager: NSObject {
             
             let urlAsset = AVURLAsset(url: url)
             
-            asset = Asset(urlAsset: urlAsset, stream: stream)
+            asset = Asset(urlAsset: urlAsset, id: id)
             
             return asset
         } catch {
@@ -189,7 +187,7 @@ class AssetPersistenceManager: NSObject {
     /// Returns the current download state for a given Asset.
     func downloadState(for asset: Asset) -> Asset.DownloadState {
         // Check if there is a file URL stored for this asset.
-        if let localFileLocation = localAssetForStream(with: asset.stream)?.urlAsset.url {
+        if let localFileLocation = localAssetForStream(with: asset.id)?.urlAsset.url {
             // Check if the file exists on disk
             if FileManager.default.fileExists(atPath: localFileLocation.path) {
                 return .downloaded
@@ -197,7 +195,7 @@ class AssetPersistenceManager: NSObject {
         }
 
         // Check if there are any active downloads in flight.
-        for (_, assetValue) in activeDownloadsMap where asset.stream.id == assetValue.stream.id {
+        for (_, assetValue) in activeDownloadsMap where asset.id == assetValue.id {
             return .downloading
         }
 
@@ -210,13 +208,13 @@ class AssetPersistenceManager: NSObject {
         let userDefaults = UserDefaults.standard
 
         do {
-            if let localFileLocation = localAssetForStream(with: asset.stream)?.urlAsset.url {
+            if let localFileLocation = localAssetForStream(with: asset.id)?.urlAsset.url {
                 try FileManager.default.removeItem(at: localFileLocation)
 
-                userDefaults.removeObject(forKey: asset.stream.id)
+                userDefaults.removeObject(forKey: asset.id)
 
                 var userInfo = [String: Any]()
-                userInfo[Asset.Keys.id] = asset.stream.id
+                userInfo[Asset.Keys.id] = asset.id
                 userInfo[Asset.Keys.downloadState] = Asset.DownloadState.notDownloaded.rawValue
                 DispatchQueue.main.async{
                     NotificationCenter.default.post(name: .AssetDownloadStateChanged, object: nil,
@@ -298,7 +296,7 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
     private func handleCompletion(for task: AVAggregateAssetDownloadTask, with asset: Asset, at downloadURL: URL, error: Error?) {
          let userDefaults = UserDefaults.standard
          var userInfo = [String: Any]()
-         userInfo[Asset.Keys.id] = asset.stream.id
+         userInfo[Asset.Keys.id] = asset.id
 
          if let error = error as NSError? {
              switch (error.domain, error.code) {
@@ -312,8 +310,8 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
          } else {
              do {
                  let bookmark = try downloadURL.bookmarkData()
-                 userDefaults.set(bookmark, forKey: asset.stream.id)
-                 downloadedAssetsMap[asset.stream.id] = asset
+                 userDefaults.set(bookmark, forKey: asset.id)
+                 downloadedAssetsMap[asset.id] = asset
              } catch {
                  print("Failed to create bookmarkData for download URL.")
              }
@@ -333,17 +331,17 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
      }
     
     private func handleCancellation(for asset: Asset, userDefaults: UserDefaults) {
-         guard let localFileLocation = localAssetForStream(with: asset.stream)?.urlAsset.url else { return }
+         guard let localFileLocation = localAssetForStream(with: asset.id)?.urlAsset.url else { return }
 
          do {
              try FileManager.default.removeItem(at: localFileLocation)
-             userDefaults.removeObject(forKey: asset.stream.id)
+             userDefaults.removeObject(forKey: asset.id)
          } catch {
-             print("An error occurred trying to delete the contents on disk for \(asset.stream.id): \(error)")
+             print("An error occurred trying to delete the contents on disk for \(asset.id): \(error)")
          }
 
          var userInfo = [String: Any]()
-         userInfo[Asset.Keys.id] = asset.stream.id
+         userInfo[Asset.Keys.id] = asset.id
          userInfo[Asset.Keys.downloadState] = Asset.DownloadState.notDownloaded.rawValue
 
         DispatchQueue.main.async {
@@ -381,9 +379,9 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
         
         // Prepare the basic userInfo dictionary that will be posted as part of our notification.
         var userInfo = [String: Any]()
-        userInfo[Asset.Keys.id] = asset.stream.id
+        userInfo[Asset.Keys.id] = asset.id
         
-        aggregateAssetDownloadTask.taskDescription = asset.stream.id
+        aggregateAssetDownloadTask.taskDescription = asset.id
         
         aggregateAssetDownloadTask.resume()
         
@@ -410,7 +408,7 @@ extension AssetPersistenceManager: AVAssetDownloadDelegate {
         }
 
         var userInfo = [String: Any]()
-        userInfo[Asset.Keys.id] = asset.stream.id
+        userInfo[Asset.Keys.id] = asset.id
         userInfo[Asset.Keys.percentDownloaded] = percentComplete
 
         DispatchQueue.main.async {

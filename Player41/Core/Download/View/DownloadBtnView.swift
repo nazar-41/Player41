@@ -22,7 +22,7 @@ struct DownloadBtnView: View {
     var body: some View {
         VStack(spacing: 16) {
             if let asset = song.asset {
-                let downloadState = vm.downloadState[asset.stream.id]
+                let downloadState = vm.downloadState[asset.id]
                 
                 VStack(spacing: 16) {
                     HStack {
@@ -41,12 +41,12 @@ struct DownloadBtnView: View {
                         // Downloading Progress
                         if downloadState == .downloading {
                             VStack {
-                                ProgressView(value: vm.downloadProgress[asset.stream.id] ?? 0, total: 1)
+                                ProgressView(value: vm.downloadProgress[asset.id] ?? 0, total: 1)
                                     .progressViewStyle(LinearProgressViewStyle())
                                     .frame(height: 6)
                                     .padding(.vertical, 8)
                                 
-                                Text(vm.downloadProgress[asset.stream.id]?.toPercentageString() ?? "0%")
+                                Text(vm.downloadProgress[asset.id]?.toPercentageString() ?? "0%")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                                 

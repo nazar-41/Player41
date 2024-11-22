@@ -54,32 +54,17 @@ class VM_DownloadBtnView: ObservableObject {
     
     func deleteAsset(_ asset: Asset) {
         AssetPersistenceManager.sharedManager.deleteAsset(asset)
-        self.downloadState[asset.stream.id] = .notDownloaded
+        self.downloadState[asset.id] = .notDownloaded
     }
     
     func cancelDownload(_ asset: Asset) {
         AssetPersistenceManager.sharedManager.cancelDownload(for: asset)
-        downloadState[asset.stream.id] = .notDownloaded
+        downloadState[asset.id] = .notDownloaded
     }
     
     private func setState() {
         guard let asset = song.asset else {return}
-        downloadState[asset.stream.id] = AssetPersistenceManager.sharedManager.downloadState(for: asset)
+        downloadState[asset.id] = AssetPersistenceManager.sharedManager.downloadState(for: asset)
     }
     
-//    func clickAction(){
-//        guard let asset = song.asset else{return}
-//#if !targetEnvironment(simulator)
-//        switch downloadState[asset.stream.id] {
-//        case .notDownloaded:
-//            downloadAsset(asset)
-//        case .downloading:
-//            cancelDownload(asset)
-//        case .downloaded:
-//            showDeleteAlert = true
-//        case .none:
-//            downloadAsset(asset)
-//        }
-//#endif
-//    }
 }
